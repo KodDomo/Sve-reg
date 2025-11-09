@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sveriges Regenter</title>
+    
+    <style>
+        /* All CSS är oförändrad */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #app-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #1a4b7c;
+            margin-top: 0;
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+        }
+        .divider {
+            border-top: 1px solid #e0e0e0;
+            margin: 24px 0;
+        }
+        .search-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .search-controls label {
+            font-weight: 500;
+            color: #333;
+        }
+        #regent-search {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #cdd5de;
+            box-sizing: border-box; 
+        }
+        #regent-list-container {
+            width: 100%;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #cdd5de;
+            border-radius: 8px;
+            background: white;
+        }
+        .regent-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.95rem;
+        }
+        .regent-item:last-child {
+            border-bottom: none;
+        }
+        .regent-item:hover {
+            background-color: #f4f8fa;
+        }
+        .regent-item.selected {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .year-button {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid #cdd5de;
+            background-color: #f8f9fa;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .year-button:hover { background-color: #e9ecef; }
+        .year-button:active { background-color: #dbe1e6; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        #year-input {
+            font-size: 1.5rem;
+            text-align: center;
+            width: 100px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #cdd5de;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        #year-input::-webkit-outer-spin-button,
+        #year-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        #result-container {
+            text-align: center;
+            padding-top: 24px;
+        }
+        #monarch-name {
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #000;
+            margin: 0 0 10px 0;
+        }
+        #monarch-search-link {
+            display: inline-flex; 
+            align-items: center;    
+            justify-content: center; 
+            margin: 16px 0;
+            padding: 12px 18px;
+            background-color: #4285F4;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 1.1rem;
+            transition: background-color 0.2s;
+        }
+        #monarch-search-link:hover {
+            background-color: #357ae8;
+        }
+        .info-text {
+            font-size: 1.1rem;
+            color: #555;
+            line-height: 1.5;
+            margin: 4px 0;
+        }
+        #message {
+            text-align: center;
+            font-weight: 500;
+            color: #d93025;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <h1>Vem regerade?</h1>
+        
+        <div class="search-controls">
+            <label for="regent-search">Sök regent (matchar medan du skriver):</label>
+            <input type="text" id="regent-search" placeholder="T.ex. Karl XII">
+            
+            <label for="regent-list-container">...eller välj i listan:</label>
+            
+            <div id="regent-list-container">
+                </div>
+        </div>
+        
+        <div class="divider"></div>
+
+        <div class="controls">
+            <button id="btn-down" class="year-button" aria-label="Föregående år">▼</button>
+            <input type="number" id="year-input" min="1523">
+            <button id="btn-up" class="year-button" aria-label="Nästa år">▲</button>
+        </div>
+
+        <div id="result-container" hidden>
+            <h2 id="monarch-name"></h2>
+            <a id="monarch-search-link" href="#" target="_blank"></a>
+            <p id="monarch-reign" class="info-text"></p>
+            <p id="monarch-life" class="info-text"></p>
+        </div>
+
+        <p id="message" hidden></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Regent-databasen
+            const monarchData = [
+                { name: "Gustav Vasa", reign_start: 1523, reign_end: 1560, birth: 1496, death: 1560 },
+                { name: "Erik XIV", reign_start: 1560, reign_end: 1568, birth: 1533, death: 1577 },
+                { name: "Johan III", reign_start: 1568, reign_end: 1592, birth: 1537, death: 1592 },
+                { name: "Sigismund", reign_start: 1592, reign_end: 1599, birth: 1566, death: 1632 },
+                { name: "Karl IX", reign_start: 1599, reign_end: 1611, birth: 1550, death: 1611 },
+                { name: "Gustav II Adolf", reign_start: 1611, reign_end: 1632, birth: 1594, death: 1632 },
+                { name: "Kristina", reign_start: 1632, reign_end: 1654, birth: 1626, death: 1689 },
+                { name: "Karl X Gustav", reign_start: 1654, reign_end: 1660, birth: 1622, death: 1660 },
+                { name: "Karl XI", reign_start: 1660, reign_end: 1697, birth: 1655, death: 1697 },
+                { name: "Karl XII", reign_start: 1697, reign_end: 1718, birth: 1682, death: 1718 },
+                { name: "Ulrika Eleonora", reign_start: 1718, reign_end: 1720, birth: 1688, death: 1741 },
+                { name: "Fredrik I", reign_start: 1720, reign_end: 1751, birth: 1676, death: 1751 },
+                { name: "Adolf Fredrik", reign_start: 1751, reign_end: 1771, birth: 1710, death: 1771 },
+                { name: "Gustav III", reign_start: 1771, reign_end: 1792, birth: 1746, death: 1792 },
+                { name: "Gustav IV Adolf", reign_start: 1792, reign_end: 1809, birth: 1778, death: 1837 },
+                { name: "Karl XIII", reign_start: 1809, reign_end: 1818, birth: 1748, death: 1818 },
+                { name: "Karl XIV Johan", reign_start: 1818, reign_end: 1844, birth: 1763, death: 1844 },
+                { name: "Oscar I", reign_start: 1844, reign_end: 1859, birth: 1799, death: 1859 },
+                { name: "Karl XV", reign_start: 1859, reign_end: 1872, birth: 1826, death: 1872 },
+                { name: "Oscar II", reign_start: 1872, reign_end: 1907, birth: 1829, death: 1907 },
+                { name: "Gustaf V", reign_start: 1907, reign_end: 1950, birth: 1858, death: 1950 },
+                { name: "Gustaf VI Adolf", reign_start: 1950, reign_end: 1973, birth: 1882, death: 1973 },
+                { name: "Carl XVI Gustaf", reign_start: 1973, reign_end: "nuvarande", birth: 1946, death: null }
+            ];
+
+            // Hämta referenser till alla element
+            const yearInput = document.getElementById('year-input');
+            const btnDown = document.getElementById('btn-down');
+            const btnUp = document.getElementById('btn-up');
+            const regentSearch = document.getElementById('regent-search');
+            const regentListContainer = document.getElementById('regent-list-container');
+            const resultContainer = document.getElementById('result-container');
+            const monarchName = document.getElementById('monarch-name');
+            const monarchSearchLink = document.getElementById('monarch-search-link');
+            const monarchReign = document.getElementById('monarch-reign');
+            const monarchLife = document.getElementById('monarch-life');
+            const message = document.getElementById('message');
+            
+            const currentYear = new Date().getFullYear(); 
+
+            // Huvudfunktion för att uppdatera visningen
+            function updateDisplay(year) {
+                let numericYear = parseInt(year, 10);
+                
+                if (isNaN(numericYear)) {
+                    numericYear = currentYear;
+                    yearInput.value = currentYear;
+                }
+                
+                // Söklogiken som vänder på listan för att hantera överlappande år
+                const monarch = [...monarchData].reverse().find(m => {
+                    const reignEnd = (m.reign_end === 'nuvarande') ? currentYear : m.reign_end;
+                    return numericYear >= m.reign_start && numericYear <= reignEnd;
+                });
+
+                if (monarch) {
+                    monarchName.textContent = monarch.name;
+                    const searchTerm = monarch.name;
+                    const googleSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(searchTerm)}`;
+                    monarchSearchLink.href = googleSearchUrl;
+                    monarchSearchLink.textContent = `Sök bild på ${monarch.name}`;
+                    
+                    // === FIXEN: Byt ut 'm' mot 'monarch' ===
+                    const reignEndText = (monarch.reign_end === 'nuvarande') ? 'nuvarande' : monarch.reign_end;
+                    // === (Tidigare stod det "m.reign_end" här, vilket kraschade skriptet) ===
+                    
+                    monarchReign.textContent = `Regent: ${monarch.reign_start}–${reignEndText}`;
+                    
+                    if (monarch.death === null) {
+                        monarchLife.textContent = `Född: ${monarch.birth}`;
+                    } else {
+                        monarchLife.textContent = `Levde: ${monarch.birth}–${monarch.death}`;
+                    }
+
+                    // Synkronisera den anpassade listan
+                    syncSelectedListItem(monarch.reign_start);
+
+                    resultContainer.hidden = false;
+                    message.hidden = true;
+                } else {
+                    resultContainer.hidden = true;
+                    syncSelectedListItem(null); // Avmarkera allt
+                    
+                    if (numericYear < 1523) {
+                         message.textContent = `Data saknas före 1523 (Gustav Vasas trontillträde).`;
+                    } else if (numericYear > currentYear) {
+                         message.textContent = `Året ${numericYear} har ännu inte inträffat.`;
+                    } else {
+                         message.textContent = `Data saknas för årtal ${numericYear}.`;
+                    }
+                    message.hidden = false;
+                }
+            }
+            
+            // Funktion: Fyller <div>-listan
+            function populateList(filter = "") {
+                const lowerFilter = filter.toLowerCase();
+                regentListContainer.innerHTML = ""; // Töm listan
+
+                monarchData.forEach(monarch => {
+                    const monarchName = monarch.name.toLowerCase();
+                    
+                    if (monarchName.includes(lowerFilter)) {
+                        const item = document.createElement('div');
+                        item.className = 'regent-item';
+                        item.dataset.year = monarch.reign_start; 
+                        
+                        const reignEndText = (monarch.reign_end === 'nuvarande') ? 'nu' : monarch.reign_end;
+                        item.textContent = `${monarch.name} (${monarch.reign_start}–${reignEndText})`;
+                        
+                        item.addEventListener('click', handleItemClick);
+                        
+                        regentListContainer.appendChild(item);
+                    }
+                });
+            }
+            
+            // Funktion: Synkroniserar list-markering
+            function syncSelectedListItem(selectedYear) {
+                for (const item of regentListContainer.children) {
+                    const isSelected = item.dataset.year === String(selectedYear);
+                    item.classList.toggle('selected', isSelected);
+                    
+                    if (isSelected) {
+                        item.scrollIntoView({ block: 'nearest' });
+                    }
+                }
+            }
+
+            // --- Händelsehanterare ---
+            
+            function handleYearInput() {
+                if (parseInt(yearInput.value, 10) > currentYear) {
+                    yearInput.value = currentYear;
+                }
+                
+                if (yearInput.value) {
+                    if (regentSearch.value !== "") {
+                        regentSearch.value = "";
+                        populateList("");
+                    }
+                    updateDisplay(yearInput.value);
+                } else {
+                    resultContainer.hidden = true;
+                    message.textContent = "Välj ett årtal mellan 1523 och " + currentYear;
+                    message.hidden = false;
+                    syncSelectedListItem(null);
+                }
+            }
+
+            function handleUp() {
+                let nextYear = (parseInt(yearInput.value, 10) || (currentYear - 1)) + 1;
+                if (nextYear > currentYear) {
+                    nextYear = currentYear;
+                }
+                yearInput.value = nextYear;
+                
+                if (regentSearch.value !== "") {
+                    regentSearch.value = "";
+                    populateList("");
+                }
+                updateDisplay(yearInput.value);
+            }
+
+            function handleDown() {
+                let prevYear = (parseInt(yearInput.value, 10) || currentYear) - 1;
+                if (prevYear < 1523) {
+                    prevYear = 1523;
+                }
+                yearInput.value = prevYear;
+
+                if (regentSearch.value !== "") {
+                    regentSearch.value = "";
+                    populateList("");
+                }
+                updateDisplay(yearInput.value);
+            }
+            
+            // Sök-input (live-sökning)
+            function handleSearchInput() {
+                populateList(regentSearch.value);
+            }
+            
+            // Klick på ett <div>-objekt
+            function handleItemClick(event) {
+                const selectedYear = event.currentTarget.dataset.year;
+                
+                if (selectedYear) {
+                    yearInput.value = selectedYear;
+                    regentSearch.value = "";
+                    populateList(""); 
+                    
+                    updateDisplay(selectedYear); 
+                }
+            }
+
+            // --- Koppla alla händelsehanterare ---
+            yearInput.addEventListener('input', handleYearInput);
+            btnUp.addEventListener('click', handleUp);
+            btnDown.addEventListener('click', handleDown);
+            
+            regentSearch.addEventListener('input', handleSearchInput);
+
+            // --- Initialisering ---
+            populateList(); // Fyll på listan med ALLA regenter
+            
+            yearInput.value = currentYear;
+            yearInput.max = currentYear; 
+            
+            updateDisplay(currentYear); // Kör en första gång
+        });
+    </script>
+
+</body>
+</html>
