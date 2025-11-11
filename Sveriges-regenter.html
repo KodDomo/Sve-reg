@@ -6,7 +6,7 @@
     <title>Sveriges Regenter</title>
     
     <style>
-        /* All CSS är oförändrad */
+        /* Allmänna stilar */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f4f8;
@@ -119,12 +119,49 @@
             text-align: center;
             padding-top: 24px;
         }
+        
+        /* === NYA STILAR FÖR REGENT-NAVIGERING === */
+        .monarch-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
         #monarch-name {
             font-size: 1.7rem;
             font-weight: 600;
             color: #000;
-            margin: 0 0 10px 0;
+            margin: 0;
+            text-align: center;
+            flex-grow: 1; /* Tar upp utrymmet i mitten */
         }
+        
+        .nav-button {
+            font-size: 1.5rem;
+            font-weight: bold;
+            line-height: 1;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #cdd5de;
+            background-color: #f8f9fa;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .nav-button:hover {
+            background-color: #e9ecef;
+        }
+        
+        .nav-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background-color: #f8f9fa; /* Behåll samma bakgrund */
+        }
+        /* ======================================= */
+        
         #monarch-search-link {
             display: inline-flex; 
             align-items: center;    
@@ -184,7 +221,12 @@
         </div>
 
         <div id="result-container" hidden>
-            <h2 id="monarch-name"></h2>
+            
+            <div class="monarch-nav">
+                <button id="btn-prev-regent" class="nav-button" aria-label="Föregående regent">«</button>
+                <h2 id="monarch-name"></h2>
+                <button id="btn-next-regent" class="nav-button" aria-label="Nästa regent">»</button>
+            </div>
             <a id="monarch-search-link" href="#" target="_blank"></a>
             <p id="monarch-reign" class="info-text"></p>
             <p id="monarch-life" class="info-text"></p>
@@ -236,6 +278,10 @@
             const monarchLife = document.getElementById('monarch-life');
             const message = document.getElementById('message');
             
+            // === NYA KNAPPAR ===
+            const btnPrevRegent = document.getElementById('btn-prev-regent');
+            const btnNextRegent = document.getElementById('btn-next-regent');
+            
             const currentYear = new Date().getFullYear(); 
 
             // Huvudfunktion för att uppdatera visningen
@@ -247,7 +293,6 @@
                     yearInput.value = currentYear;
                 }
                 
-                // Söklogiken som vänder på listan för att hantera överlappande år
                 const monarch = [...monarchData].reverse().find(m => {
                     const reignEnd = (m.reign_end === 'nuvarande') ? currentYear : m.reign_end;
                     return numericYear >= m.reign_start && numericYear <= reignEnd;
@@ -260,10 +305,7 @@
                     monarchSearchLink.href = googleSearchUrl;
                     monarchSearchLink.textContent = `Sök bild på ${monarch.name}`;
                     
-                    // === FIXEN: Byt ut 'm' mot 'monarch' ===
                     const reignEndText = (monarch.reign_end === 'nuvarande') ? 'nuvarande' : monarch.reign_end;
-                    // === (Tidigare stod det "m.reign_end" här, vilket kraschade skriptet) ===
-                    
                     monarchReign.textContent = `Regent: ${monarch.reign_start}–${reignEndText}`;
                     
                     if (monarch.death === null) {
@@ -272,14 +314,23 @@
                         monarchLife.textContent = `Levde: ${monarch.birth}–${monarch.death}`;
                     }
 
-                    // Synkronisera den anpassade listan
                     syncSelectedListItem(monarch.reign_start);
 
                     resultContainer.hidden = false;
                     message.hidden = true;
+                    
+                    // === NYTT: Inaktivera knappar vid behov ===
+                    const currentIndex = monarchData.findIndex(m => m.name === monarch.name);
+                    btnPrevRegent.disabled = (currentIndex === 0);
+                    btnNextRegent.disabled = (currentIndex === monarchData.length - 1);
+                    
                 } else {
                     resultContainer.hidden = true;
-                    syncSelectedListItem(null); // Avmarkera allt
+                    syncSelectedListItem(null); 
+                    
+                    // Inaktivera knappar om ingen regent hittas
+                    btnPrevRegent.disabled = true;
+                    btnNextRegent.disabled = true;
                     
                     if (numericYear < 1523) {
                          message.textContent = `Data saknas före 1523 (Gustav Vasas trontillträde).`;
@@ -295,7 +346,7 @@
             // Funktion: Fyller <div>-listan
             function populateList(filter = "") {
                 const lowerFilter = filter.toLowerCase();
-                regentListContainer.innerHTML = ""; // Töm listan
+                regentListContainer.innerHTML = ""; 
 
                 monarchData.forEach(monarch => {
                     const monarchName = monarch.name.toLowerCase();
@@ -393,6 +444,37 @@
                     updateDisplay(selectedYear); 
                 }
             }
+            
+            // === NYA HÄNDELSEHANTERARE FÖR REGENT-NAVIGERING ===
+            
+            // Helper-funktion för att hämta nuvarande index
+            function getCurrentMonarchIndex() {
+                const currentYearVal = parseInt(yearInput.value, 10);
+                const monarch = [...monarchData].reverse().find(m => {
+                    const reignEnd = (m.reign_end === 'nuvarande') ? currentYear : m.reign_end;
+                    return currentYearVal >= m.reign_start && currentYearVal <= reignEnd;
+                });
+                if (!monarch) return -1;
+                return monarchData.findIndex(m => m.name === monarch.name);
+            }
+            
+            function handleNextRegent() {
+                const currentIndex = getCurrentMonarchIndex();
+                if (currentIndex !== -1 && currentIndex < monarchData.length - 1) {
+                    const nextMonarch = monarchData[currentIndex + 1];
+                    yearInput.value = nextMonarch.reign_start;
+                    updateDisplay(nextMonarch.reign_start);
+                }
+            }
+
+            function handlePrevRegent() {
+                const currentIndex = getCurrentMonarchIndex();
+                if (currentIndex !== -1 && currentIndex > 0) {
+                    const prevMonarch = monarchData[currentIndex - 1];
+                    yearInput.value = prevMonarch.reign_start;
+                    updateDisplay(prevMonarch.reign_start);
+                }
+            }
 
             // --- Koppla alla händelsehanterare ---
             yearInput.addEventListener('input', handleYearInput);
@@ -400,6 +482,9 @@
             btnDown.addEventListener('click', handleDown);
             
             regentSearch.addEventListener('input', handleSearchInput);
+            
+            btnPrevRegent.addEventListener('click', handlePrevRegent);
+            btnNextRegent.addEventListener('click', handleNextRegent);
 
             // --- Initialisering ---
             populateList(); // Fyll på listan med ALLA regenter
