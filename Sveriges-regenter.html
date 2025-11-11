@@ -6,7 +6,7 @@
     <title>Sveriges Regenter</title>
     
     <style>
-        /* Allmänna stilar */
+        /* All CSS är oförändrad */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f4f8;
@@ -119,8 +119,6 @@
             text-align: center;
             padding-top: 24px;
         }
-        
-        /* === NYA STILAR FÖR REGENT-NAVIGERING === */
         .monarch-nav {
             display: flex;
             align-items: center;
@@ -128,16 +126,14 @@
             gap: 10px;
             margin-bottom: 10px;
         }
-        
         #monarch-name {
             font-size: 1.7rem;
             font-weight: 600;
             color: #000;
             margin: 0;
             text-align: center;
-            flex-grow: 1; /* Tar upp utrymmet i mitten */
+            flex-grow: 1;
         }
-        
         .nav-button {
             font-size: 1.5rem;
             font-weight: bold;
@@ -150,18 +146,14 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        
         .nav-button:hover {
             background-color: #e9ecef;
         }
-        
         .nav-button:disabled {
             opacity: 0.4;
             cursor: not-allowed;
-            background-color: #f8f9fa; /* Behåll samma bakgrund */
+            background-color: #f8f9fa;
         }
-        /* ======================================= */
-        
         #monarch-search-link {
             display: inline-flex; 
             align-items: center;    
@@ -204,7 +196,7 @@
         
         <div class="search-controls">
             <label for="regent-search">Sök regent (matchar medan du skriver):</label>
-            <input type="text" id="regent-search" placeholder="T.ex. Karl XII">
+            <input type="text" id="regent-search" placeholder="T.ex. Erik Segersäll">
             
             <label for="regent-list-container">...eller välj i listan:</label>
             
@@ -216,17 +208,17 @@
 
         <div class="controls">
             <button id="btn-down" class="year-button" aria-label="Föregående år">▼</button>
-            <input type="number" id="year-input" min="1523">
+            <input type="number" id="year-input" min="970">
             <button id="btn-up" class="year-button" aria-label="Nästa år">▲</button>
         </div>
 
         <div id="result-container" hidden>
-            
             <div class="monarch-nav">
                 <button id="btn-prev-regent" class="nav-button" aria-label="Föregående regent">«</button>
                 <h2 id="monarch-name"></h2>
                 <button id="btn-next-regent" class="nav-button" aria-label="Nästa regent">»</button>
             </div>
+            
             <a id="monarch-search-link" href="#" target="_blank"></a>
             <p id="monarch-reign" class="info-text"></p>
             <p id="monarch-life" class="info-text"></p>
@@ -238,8 +230,55 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            // Regent-databasen
+            // Regentdatabasen
             const monarchData = [
+                { name: "Erik Segersäll", reign_start: 970, reign_end: 995, birth: null, death: 995 },
+                { name: "Olof Skötkonung", reign_start: 995, reign_end: 1022, birth: 980, death: 1022 },
+                { name: "Anund Jakob", reign_start: 1022, reign_end: 1050, birth: 1008, death: 1050 },
+                { name: "Emund den gamle", reign_start: 1050, reign_end: 1060, birth: null, death: 1060 },
+                { name: "Stenkil", reign_start: 1060, reign_end: 1066, birth: 1030, death: 1066 },
+                { name: "Erik och Erik", reign_start: 1066, reign_end: 1067, birth: null, death: 1067 },
+                { name: "Halsten", reign_start: 1067, reign_end: 1070, birth: null, death: 1084 },
+                { name: "Anund Gårdske", reign_start: 1070, reign_end: 1075, birth: null, death: null },
+                { name: "Håkan Röde", reign_start: 1075, reign_end: 1079, birth: null, death: null },
+                { name: "Inge den äldre", reign_start: 1079, reign_end: 1084, birth: null, death: 1105 },
+                { name: "Blot-Sven", reign_start: 1084, reign_end: 1087, birth: null, death: 1087 },
+                { name: "Inge den äldre", reign_start: 1087, reign_end: 1105, birth: null, death: 1105 },
+                { name: "Filip", reign_start: 1105, reign_end: 1118, birth: null, death: 1118 },
+                { name: "Inge den yngre", reign_start: 1118, reign_end: 1125, birth: null, death: 1125 },
+                { name: "Ragnvald Knaphövde", reign_start: 1125, reign_end: 1126, birth: null, death: 1126 },
+                { name: "Magnus den starke", reign_start: 1125, reign_end: 1132, birth: 1106, death: 1134 },
+                { name: "Sverker den äldre", reign_start: 1132, reign_end: 1156, birth: null, death: 1156 },
+                { name: "Erik den helige", reign_start: 1156, reign_end: 1160, birth: 1120, death: 1160 },
+                { name: "Magnus Henriksson", reign_start: 1160, reign_end: 1161, birth: null, death: 1161 },
+                { name: "Karl Sverkersson", reign_start: 1161, reign_end: 1167, birth: 1130, death: 1167 },
+                { name: "Knut Eriksson", reign_start: 1167, reign_end: 1196, birth: 1148, death: 1196 },
+                { name: "Sverker den yngre", reign_start: 1196, reign_end: 1208, birth: 1164, death: 1210 },
+                { name: "Erik Knutsson", reign_start: 1208, reign_end: 1216, birth: 1180, death: 1216 },
+                { name: "Johan Sverkersson", reign_start: 1216, reign_end: 1222, birth: 1201, death: 1222 },
+                { name: "Erik Eriksson (läspe och halte)", reign_start: 1222, reign_end: 1229, birth: 1216, death: 1250 },
+                { name: "Knut Långe", reign_start: 1229, reign_end: 1234, birth: null, death: 1234 },
+                { name: "Erik Eriksson (läspe och halte)", reign_start: 1234, reign_end: 1250, birth: 1216, death: 1250 },
+                { name: "Valdemar Birgersson", reign_start: 1250, reign_end: 1275, birth: 1239, death: 1302 },
+                { name: "Magnus Ladulås", reign_start: 1275, reign_end: 1290, birth: 1240, death: 1290 },
+                { name: "Birger Magnusson", reign_start: 1290, reign_end: 1318, birth: 1280, death: 1321 },
+                { name: "Magnus Eriksson", reign_start: 1319, reign_end: 1364, birth: 1316, death: 1374 },
+                { name: "Erik Magnusson", reign_start: 1357, reign_end: 1359, birth: 1339, death: 1359 },
+                { name: "Håkan Magnusson", reign_start: 1362, reign_end: 1364, birth: 1340, death: 1380 },
+                { name: "Albrekt av Mecklenburg", reign_start: 1364, reign_end: 1389, birth: 1338, death: 1412 },
+                { name: "Margareta", reign_start: 1389, reign_end: 1412, birth: 1353, death: 1412 },
+                { name: "Erik av Pommern", reign_start: 1396, reign_end: 1439, birth: 1382, death: 1459 },
+                { name: "Kristofer av Bayern", reign_start: 1441, reign_end: 1448, birth: 1416, death: 1448 },
+                { name: "Karl Knutsson (Bonde)", reign_start: 1448, reign_end: 1457, birth: 1409, death: 1470 },
+                { name: "Kristian I", reign_start: 1457, reign_end: 1464, birth: 1426, death: 1481 },
+                { name: "Karl Knutsson (Bonde)", reign_start: 1464, reign_end: 1465, birth: 1409, death: 1470 },
+                { name: "Karl Knutsson (Bonde)", reign_start: 1467, reign_end: 1470, birth: 1409, death: 1470 },
+                { name: "Sten Sture den äldre", reign_start: 1470, reign_end: 1497, birth: 1440, death: 1503 },
+                { name: "Hans (Johan II)", reign_start: 1497, reign_end: 1501, birth: 1455, death: 1513 },
+                { name: "Sten Sture den äldre", reign_start: 1501, reign_end: 1503, birth: 1440, death: 1503 },
+                { name: "Svante Nilsson (Sture)", reign_start: 1504, reign_end: 1512, birth: 1460, death: 1512 },
+                { name: "Sten Sture den yngre", reign_start: 1512, reign_end: 1520, birth: 1493, death: 1520 },
+                { name: "Kristian II", reign_start: 1520, reign_end: 1521, birth: 1481, death: 1559 },
                 { name: "Gustav Vasa", reign_start: 1523, reign_end: 1560, birth: 1496, death: 1560 },
                 { name: "Erik XIV", reign_start: 1560, reign_end: 1568, birth: 1533, death: 1577 },
                 { name: "Johan III", reign_start: 1568, reign_end: 1592, birth: 1537, death: 1592 },
@@ -277,27 +316,20 @@
             const monarchReign = document.getElementById('monarch-reign');
             const monarchLife = document.getElementById('monarch-life');
             const message = document.getElementById('message');
-            
-            // === NYA KNAPPAR ===
             const btnPrevRegent = document.getElementById('btn-prev-regent');
             const btnNextRegent = document.getElementById('btn-next-regent');
             
             const currentYear = new Date().getFullYear(); 
+            const earliestYear = 970;
+            
+            // === NYTT: Global variabel för att hålla reda på visad regent ===
+            let currentMonarchObject = null;
 
-            // Huvudfunktion för att uppdatera visningen
-            function updateDisplay(year) {
-                let numericYear = parseInt(year, 10);
+            // Funktion: Visar en specifik regent
+            function displayMonarch(monarch) {
+                // === NYTT: Sätt den globala variabeln ===
+                currentMonarchObject = monarch; 
                 
-                if (isNaN(numericYear)) {
-                    numericYear = currentYear;
-                    yearInput.value = currentYear;
-                }
-                
-                const monarch = [...monarchData].reverse().find(m => {
-                    const reignEnd = (m.reign_end === 'nuvarande') ? currentYear : m.reign_end;
-                    return numericYear >= m.reign_start && numericYear <= reignEnd;
-                });
-
                 if (monarch) {
                     monarchName.textContent = monarch.name;
                     const searchTerm = monarch.name;
@@ -305,22 +337,37 @@
                     monarchSearchLink.href = googleSearchUrl;
                     monarchSearchLink.textContent = `Sök bild på ${monarch.name}`;
                     
+                    const reignEnd = (monarch.reign_end === 'nuvarande') ? currentYear : monarch.reign_end;
                     const reignEndText = (monarch.reign_end === 'nuvarande') ? 'nuvarande' : monarch.reign_end;
                     monarchReign.textContent = `Regent: ${monarch.reign_start}–${reignEndText}`;
                     
-                    if (monarch.death === null) {
+                    const birthYear = monarch.birth || 'Okänt';
+                    const deathYear = monarch.death || 'Okänt';
+
+                    if (birthYear === 'Okänt' && deathYear === 'Okänt') {
+                        monarchLife.textContent = `Levde: Okänt`;
+                    } else if (birthYear === 'Okänt') {
+                        monarchLife.textContent = `Levde: Okänt–${deathYear}`;
+                    } else if (deathYear === 'Okänt') {
+                         monarchLife.textContent = `Född: ${birthYear}`;
+                    } else if (monarch.death === null) {
                         monarchLife.textContent = `Född: ${monarch.birth}`;
                     } else {
-                        monarchLife.textContent = `Levde: ${monarch.birth}–${monarch.death}`;
+                        monarchLife.textContent = `Levde: ${birthYear}–${deathYear}`;
                     }
 
-                    syncSelectedListItem(monarch.reign_start);
+                    syncSelectedListItem(monarch.reign_start, monarch.name);
+                    
+                    // === NYTT: Sätt bara årtalet om det inte är det som anropade ===
+                    // (Detta är en liten men viktig optimering för att undvika onödiga uppdateringar)
+                    if (parseInt(yearInput.value, 10) !== monarch.reign_start) {
+                        yearInput.value = monarch.reign_start;
+                    }
 
                     resultContainer.hidden = false;
                     message.hidden = true;
                     
-                    // === NYTT: Inaktivera knappar vid behov ===
-                    const currentIndex = monarchData.findIndex(m => m.name === monarch.name);
+                    const currentIndex = monarchData.findIndex(m => m.name === monarch.name && m.reign_start === monarch.reign_start);
                     btnPrevRegent.disabled = (currentIndex === 0);
                     btnNextRegent.disabled = (currentIndex === monarchData.length - 1);
                     
@@ -328,21 +375,37 @@
                     resultContainer.hidden = true;
                     syncSelectedListItem(null); 
                     
-                    // Inaktivera knappar om ingen regent hittas
                     btnPrevRegent.disabled = true;
                     btnNextRegent.disabled = true;
                     
-                    if (numericYear < 1523) {
-                         message.textContent = `Data saknas före 1523 (Gustav Vasas trontillträde).`;
+                    const numericYear = parseInt(yearInput.value, 10);
+                    if (numericYear < earliestYear) {
+                         message.textContent = `Data saknas före ca ${earliestYear}.`;
                     } else if (numericYear > currentYear) {
                          message.textContent = `Året ${numericYear} har ännu inte inträffat.`;
                     } else {
-                         message.textContent = `Data saknas för årtal ${numericYear}.`;
+                         message.textContent = `Data saknas för årtal ${numericYear}. (T.ex. under maktkamper/interregnum).`;
                     }
                     message.hidden = false;
                 }
             }
             
+            // Funktion: Hittar en regent baserat på år
+            function findMonarchByYear(year) {
+                let numericYear = parseInt(year, 10);
+                
+                if (isNaN(numericYear)) {
+                    numericYear = currentYear;
+                }
+                
+                // Söklogiken som vänder på listan
+                const monarch = [...monarchData].reverse().find(m => {
+                    const reignEnd = (m.reign_end === 'nuvarande') ? currentYear : m.reign_end;
+                    return numericYear >= m.reign_start && numericYear <= reignEnd;
+                });
+                return monarch;
+            }
+
             // Funktion: Fyller <div>-listan
             function populateList(filter = "") {
                 const lowerFilter = filter.toLowerCase();
@@ -355,6 +418,7 @@
                         const item = document.createElement('div');
                         item.className = 'regent-item';
                         item.dataset.year = monarch.reign_start; 
+                        item.dataset.name = monarch.name;
                         
                         const reignEndText = (monarch.reign_end === 'nuvarande') ? 'nu' : monarch.reign_end;
                         item.textContent = `${monarch.name} (${monarch.reign_start}–${reignEndText})`;
@@ -367,9 +431,13 @@
             }
             
             // Funktion: Synkroniserar list-markering
-            function syncSelectedListItem(selectedYear) {
+            function syncSelectedListItem(selectedYear, selectedName) {
                 for (const item of regentListContainer.children) {
-                    const isSelected = item.dataset.year === String(selectedYear);
+                    const itemYear = item.dataset.year;
+                    const itemName = item.dataset.name;
+                    
+                    const isSelected = (itemYear === String(selectedYear) && itemName === selectedName);
+                    
                     item.classList.toggle('selected', isSelected);
                     
                     if (isSelected) {
@@ -390,12 +458,13 @@
                         regentSearch.value = "";
                         populateList("");
                     }
-                    updateDisplay(yearInput.value);
+                    const monarch = findMonarchByYear(yearInput.value);
+                    displayMonarch(monarch);
                 } else {
-                    resultContainer.hidden = true;
-                    message.textContent = "Välj ett årtal mellan 1523 och " + currentYear;
+                    currentMonarchObject = null; // Nollställ den globala variabeln
+                    displayMonarch(null); 
+                    message.textContent = "Välj ett årtal mellan " + earliestYear + " och " + currentYear;
                     message.hidden = false;
-                    syncSelectedListItem(null);
                 }
             }
 
@@ -410,13 +479,14 @@
                     regentSearch.value = "";
                     populateList("");
                 }
-                updateDisplay(yearInput.value);
+                const monarch = findMonarchByYear(yearInput.value);
+                displayMonarch(monarch);
             }
 
             function handleDown() {
                 let prevYear = (parseInt(yearInput.value, 10) || currentYear) - 1;
-                if (prevYear < 1523) {
-                    prevYear = 1523;
+                if (prevYear < earliestYear) {
+                    prevYear = earliestYear;
                 }
                 yearInput.value = prevYear;
 
@@ -424,7 +494,8 @@
                     regentSearch.value = "";
                     populateList("");
                 }
-                updateDisplay(yearInput.value);
+                const monarch = findMonarchByYear(yearInput.value);
+                displayMonarch(monarch);
             }
             
             // Sök-input (live-sökning)
@@ -435,44 +506,46 @@
             // Klick på ett <div>-objekt
             function handleItemClick(event) {
                 const selectedYear = event.currentTarget.dataset.year;
+                const selectedName = event.currentTarget.dataset.name;
                 
                 if (selectedYear) {
-                    yearInput.value = selectedYear;
                     regentSearch.value = "";
                     populateList(""); 
                     
-                    updateDisplay(selectedYear); 
+                    const monarch = monarchData.find(m => m.reign_start == selectedYear && m.name == selectedName);
+                    displayMonarch(monarch); 
                 }
             }
             
-            // === NYA HÄNDELSEHANTERARE FÖR REGENT-NAVIGERING ===
-            
-            // Helper-funktion för att hämta nuvarande index
-            function getCurrentMonarchIndex() {
-                const currentYearVal = parseInt(yearInput.value, 10);
-                const monarch = [...monarchData].reverse().find(m => {
-                    const reignEnd = (m.reign_end === 'nuvarande') ? currentYear : m.reign_end;
-                    return currentYearVal >= m.reign_start && currentYearVal <= reignEnd;
-                });
-                if (!monarch) return -1;
-                return monarchData.findIndex(m => m.name === monarch.name);
-            }
+            // === UPPDATERADE FUNKTIONER FÖR REGENT-NAVIGERING ===
             
             function handleNextRegent() {
-                const currentIndex = getCurrentMonarchIndex();
+                // Titta på den globala variabeln, inte på årtalet
+                if (!currentMonarchObject) return; 
+                
+                const currentIndex = monarchData.findIndex(m => 
+                    m.name === currentMonarchObject.name && 
+                    m.reign_start === currentMonarchObject.reign_start
+                );
+
                 if (currentIndex !== -1 && currentIndex < monarchData.length - 1) {
                     const nextMonarch = monarchData[currentIndex + 1];
-                    yearInput.value = nextMonarch.reign_start;
-                    updateDisplay(nextMonarch.reign_start);
+                    displayMonarch(nextMonarch);
                 }
             }
 
             function handlePrevRegent() {
-                const currentIndex = getCurrentMonarchIndex();
-                if (currentIndex !== -1 && currentIndex > 0) {
+                // Titta på den globala variabeln, inte på årtalet
+                if (!currentMonarchObject) return; 
+
+                const currentIndex = monarchData.findIndex(m => 
+                    m.name === currentMonarchObject.name && 
+                    m.reign_start === currentMonarchObject.reign_start
+                );
+                
+                if (currentIndex > 0) { // Behöver bara kolla om det är mer än 0
                     const prevMonarch = monarchData[currentIndex - 1];
-                    yearInput.value = prevMonarch.reign_start;
-                    updateDisplay(prevMonarch.reign_start);
+                    displayMonarch(prevMonarch);
                 }
             }
 
@@ -490,9 +563,11 @@
             populateList(); // Fyll på listan med ALLA regenter
             
             yearInput.value = currentYear;
+            yearInput.min = earliestYear;
             yearInput.max = currentYear; 
             
-            updateDisplay(currentYear); // Kör en första gång
+            const initialMonarch = findMonarchByYear(currentYear);
+            displayMonarch(initialMonarch);
         });
     </script>
 
