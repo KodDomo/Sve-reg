@@ -6,7 +6,7 @@
     <title>Sveriges Regenter</title>
     
     <style>
-        /* All CSS är oförändrad */
+        /* Allmänna stilar */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f4f8;
@@ -187,6 +187,14 @@
         [hidden] {
             display: none !important;
         }
+
+        /* === NYTT: Stil för timestamp === */
+        #version-timestamp {
+            font-size: 0.85rem;
+            color: #888;
+            text-align: center;
+            margin-top: 16px;
+        }
     </style>
 </head>
 <body>
@@ -226,6 +234,10 @@
 
         <p id="message" hidden></p>
     </div>
+
+    <p id="version-timestamp">
+        Genererad: 2025-11-11 kl. 10:59
+    </p>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -322,12 +334,12 @@
             const currentYear = new Date().getFullYear(); 
             const earliestYear = 970;
             
-            // === NYTT: Global variabel för att hålla reda på visad regent ===
+            // Global variabel för att hålla reda på visad regent
             let currentMonarchObject = null;
 
             // Funktion: Visar en specifik regent
             function displayMonarch(monarch) {
-                // === NYTT: Sätt den globala variabeln ===
+                // Sätt den globala variabeln
                 currentMonarchObject = monarch; 
                 
                 if (monarch) {
@@ -358,11 +370,8 @@
 
                     syncSelectedListItem(monarch.reign_start, monarch.name);
                     
-                    // === NYTT: Sätt bara årtalet om det inte är det som anropade ===
-                    // (Detta är en liten men viktig optimering för att undvika onödiga uppdateringar)
-                    if (parseInt(yearInput.value, 10) !== monarch.reign_start) {
-                        yearInput.value = monarch.reign_start;
-                    }
+                    // Sätt årtalsrutan till regentens startår
+                    yearInput.value = monarch.reign_start;
 
                     resultContainer.hidden = false;
                     message.hidden = true;
@@ -461,7 +470,7 @@
                     const monarch = findMonarchByYear(yearInput.value);
                     displayMonarch(monarch);
                 } else {
-                    currentMonarchObject = null; // Nollställ den globala variabeln
+                    currentMonarchObject = null; // Nollställ
                     displayMonarch(null); 
                     message.textContent = "Välj ett årtal mellan " + earliestYear + " och " + currentYear;
                     message.hidden = false;
@@ -517,10 +526,9 @@
                 }
             }
             
-            // === UPPDATERADE FUNKTIONER FÖR REGENT-NAVIGERING ===
+            // === KORRIGERADE FUNKTIONER FÖR REGENT-NAVIGERING ===
             
             function handleNextRegent() {
-                // Titta på den globala variabeln, inte på årtalet
                 if (!currentMonarchObject) return; 
                 
                 const currentIndex = monarchData.findIndex(m => 
@@ -535,7 +543,6 @@
             }
 
             function handlePrevRegent() {
-                // Titta på den globala variabeln, inte på årtalet
                 if (!currentMonarchObject) return; 
 
                 const currentIndex = monarchData.findIndex(m => 
@@ -543,7 +550,7 @@
                     m.reign_start === currentMonarchObject.reign_start
                 );
                 
-                if (currentIndex > 0) { // Behöver bara kolla om det är mer än 0
+                if (currentIndex > 0) {
                     const prevMonarch = monarchData[currentIndex - 1];
                     displayMonarch(prevMonarch);
                 }
