@@ -97,6 +97,18 @@
             margin: 0 0 10px 0;
         }
 
+        /* Bild på regenten */
+        #monarch-portrait {
+            width: 100%;
+            max-width: 260px;
+            height: auto;
+            display: block;
+            margin: 0 auto 12px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            object-fit: contain;
+        }
+
         /* === STIL FÖR DEN NYA SÖKLÄNKEN === */
         #monarch-search-link {
             display: inline-block;
@@ -150,8 +162,11 @@
 
         <div id="result-container" hidden>
             <h2 id="monarch-name"></h2>
+
+            <!-- Porträtt -->
+            <img id="monarch-portrait" src="" alt="" hidden>
             
-            <a id="monarch-search-link" href="#" target="_blank"></a>
+            <a id="monarch-search-link" href="#" target="_blank" rel="noopener"></a>
             
             <p id="monarch-reign" class="info-text"></p>
             <p id="monarch-life" class="info-text"></p>
@@ -163,7 +178,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            // === ÄNDRING HÄR: 'image_url' är borttaget ===
+            // Vi lägger nu till stöd för porträtt genom att hämta sidans miniatyrbild från sv.wikipedia.org
             const monarchData = [
                 { name: "Gustav Vasa", reign_start: 1523, reign_end: 1560, birth: 1496, death: 1560 },
                 { name: "Erik XIV", reign_start: 1560, reign_end: 1568, birth: 1533, death: 1577 },
@@ -196,15 +211,47 @@
             const btnUp = document.getElementById('btn-up');
             const resultContainer = document.getElementById('result-container');
             const monarchName = document.getElementById('monarch-name');
-            
-            // === ÄNDRING HÄR: Referens till <a>-taggen ===
+            const monarchPortrait = document.getElementById('monarch-portrait');
             const monarchSearchLink = document.getElementById('monarch-search-link');
-            
             const monarchReign = document.getElementById('monarch-reign');
             const monarchLife = document.getElementById('monarch-life');
             const message = document.getElementById('message');
             
             const currentYear = new Date().getFullYear();
+
+            // Hämtar miniatyrbild från sv.wikipedia för ett givet namn. Dölj bilden om inget hittas.
+            function fetchPortrait(name) {
+                // Dölj och rensa medan vi hämtar
+                monarchPortrait.hidden = true;
+                monarchPortrait.src = '';
+                monarchPortrait.alt = '';
+
+                // Använd Wikipedia API för att få sidans miniatyrbild (om den finns)
+                const title = encodeURIComponent(name);
+                const url = `https://sv.wikipedia.org/w/api.php?action=query&format=json&origin=*&prop=pageimages&piprop=thumbnail&pithumbsize=600&titles=${title}`;
+
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.query || !data.query.pages) {
+                            monarchPortrait.hidden = true;
+                            return;
+                        }
+                        const pages = data.query.pages;
+                        const page = Object.values(pages)[0];
+                        if (page && page.thumbnail && page.thumbnail.source) {
+                            monarchPortrait.src = page.thumbnail.source;
+                            monarchPortrait.alt = `Porträtt av ${name}`;
+                            monarchPortrait.hidden = false;
+                        } else {
+                            // Inget bildmaterial hittades
+                            monarchPortrait.hidden = true;
+                        }
+                    })
+                    .catch(() => {
+                        monarchPortrait.hidden = true;
+                    });
+            }
 
             // Huvudfunktion för att uppdatera informationen
             function updateDisplay(year) {
@@ -224,14 +271,15 @@
                     // Sätt regentens namn
                     monarchName.textContent = monarch.name;
                     
-                    // === ÄNDRING HÄR: Skapa och uppdatera Google-söklänken ===
+                    // Hämta och visa porträtt (om möjligt)
+                    fetchPortrait(monarch.name);
+
+                    // Skapa och uppdatera Google-söklänken
                     const searchTerm = monarch.name;
-                    // encodeURIComponent ser till att namn som "Gustav II Adolf" blir sökbara
                     const googleSearchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(searchTerm)}`;
                     
                     monarchSearchLink.href = googleSearchUrl;
                     monarchSearchLink.textContent = `Sök bild på ${monarch.name}`;
-                    // =========================================================
 
                     const reignEndText = (monarch.reign_end === 'nuvarande') ? 'nuvarande' : monarch.reign_end;
                     monarchReign.textContent = `Regent: ${monarch.reign_start}–${reignEndText}`;
